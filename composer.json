@@ -4,6 +4,10 @@
     "type": "yii2-extension",
     "keywords": ["yii2","extension","gii","migration"],
     "license": "BSD-3-Clause",
+    "support": {
+        "issues": "https://github.com/yiimaker/yii2-gii-migration/issues?state=open",
+        "source": "https://github.com/yiimaker/yii2-gii-migration"
+    },
     "authors": [
         {
             "name": "Ruslan Saiko",
@@ -18,10 +22,8 @@
     ],
     "require": {
         "yiisoft/yii2": "~2.0.0",
-
-        "bower-asset/jquery-ui": "^1.12.1",
-
-        "unclead/yii2-multiple-input": "~2.0"
+        "unclead/yii2-multiple-input": "~2.0",
+        "bower-asset/jquery-ui": "^1.12.1"
     },
     "autoload": {
         "psr-4": {
