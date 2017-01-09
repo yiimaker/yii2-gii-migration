@@ -166,10 +166,6 @@ $js = <<<js
     });
 js;
 $css = <<<css
-.default-view .modal-dialog {
-    width: 90%;
-}
-
 #form-fields {
     width: 100%;
 }
