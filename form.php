@@ -165,7 +165,17 @@ $js = <<<js
         $( "#sortable" ).parent().sortable();
     });
 js;
+$css = <<<css
+.default-view .modal-dialog {
+    width: 90%;
+}
 
+#form-fields {
+    width: 100%;
+}
 
+css;
+
+$this->registerCss($css);
 $this->registerJs($js, \yii\web\View::POS_END);
 ?>

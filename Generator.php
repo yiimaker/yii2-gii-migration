@@ -109,7 +109,7 @@ class Generator extends \yii\gii\Generator
                 'name' => 'id',
                 'type' => 'primaryKey',
                 'params' => null,
-                'notNull' => false,
+                'notNull' => true,
                 'defaultValue' => null,
                 'isIndex' => true,
                 'isUnique' => false,
