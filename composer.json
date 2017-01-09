@@ -1,0 +1,31 @@
+{
+    "name": "yiimaker/yii2-gii-migration",
+    "description": "Yii2 Gii Migration",
+    "type": "yii2-extension",
+    "keywords": ["yii2","extension","gii","migration"],
+    "license": "BSD-3-Clause",
+    "authors": [
+        {
+            "name": "Ruslan Saiko",
+            "email": "ruslan.saiko.dev@gmail.com"
+        }
+    ],
+    "repositories": [
+        {
+            "type": "composer",
+            "url": "https://asset-packagist.org"
+        }
+    ],
+    "require": {
+        "yiisoft/yii2": "~2.0.0",
+
+        "bower-asset/jquery-ui": "^1.12.1",
+
+        "unclead/yii2-multiple-input": "~2.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "ymaker\\gii\\migration\\": ""
+        }
+    }
+}
