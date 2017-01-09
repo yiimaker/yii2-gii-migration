@@ -24,7 +24,7 @@ class <?=$migrationName?> extends Migration
     {
         $this->createTable($this->tableName, [
     <?php foreach ($fields as $field): ?>
-        '<?=$field['name']?>' => $this-><?=$field['type']?>(<?=$field['params']?:''?>)-><?= $field['isNull'] ?'null': 'notNull' ?>()<?=$field['isUnique']?'->unique()':''?><?= !empty($field['comment']) ? "->comment('{$field['comment']}')":'' ?>,
+        '<?=$field['name']?>' => $this-><?=$field['type']?>(<?=$field['params']?:''?>)-><?= $field['notNull'] ?'notNull': 'null' ?>()<?=$field['isUnique']?'->unique()':''?><?= !empty($field['comment']) ? "->comment('{$field['comment']}')":'' ?>,
     <?php endforeach; ?>
     ]);
 <?php if (!empty($indexes)): ?>

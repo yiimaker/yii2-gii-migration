@@ -40,9 +40,9 @@ echo $form->field($generator, 'fields')->widget(MultipleInput::className(), [
             'title' => 'Params',
         ],
         [
-            'name' => 'isNull',
+            'name' => 'notNull',
             'type' => 'checkbox',
-            'title' => 'Is Null',
+            'title' => 'Not NULL',
         ],
         [
             'name' => 'defaultValue',
@@ -89,6 +89,7 @@ echo $form->field($generator, 'foreignKeys')->widget(MultipleInput::className(),
             'name' => 'column',
             'type' => 'textInput',
             'title' => 'Column',
+            'enableError' => true,
         ],
         [
             'name' => 'refTable',

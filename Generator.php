@@ -15,44 +15,109 @@ use yii\validators\RequiredValidator;
 class Generator extends \yii\gii\Generator
 {
 
+    /**
+     * @var string the path to the folder in which the migration file will be generated
+     */
     public $migrationPath = '@console/migrations';
+    /**
+     * @var string connection to a database
+     */
     public $db = 'db';
+    /**
+     * @var array table fields
+     */
     public $fields;
+    /**
+     * @var array table foreign keys
+     */
     public $foreignKeys;
+    /**
+     * @var bool use table prefix
+     */
     public $useTablePrefix = true;
+    /**
+     * @var string table name
+     */
     public $tableName;
-    public $name;
+    /**
+     * @var string migration name
+     */
     public $migrationName;
 
+    /**
+     * @var string postfix for translation table name
+     */
     public $translationPostfix = '_translation';
+    /**
+     * @var string name for model column
+     */
     public $translationRefColumn = 'id';
+    /**
+     * @var string name for translation model column
+     */
     public $translationTableColumn = 'model_id';
 
-
+    /**
+     * @var string language table name
+     */
     public $translationLanguageTableName = 'language';
-    public $translationLanguageColumnName = 'language';
-    public $translationLanguageColumnParam = null;
-    public $translationLanguageColumnType = 'string';
+    /**
+     * @var string language column name in language table
+     */
     public $translationLanguageColumnRefName = 'code';
+    /**
+     * @var string language column name for translation table
+     */
+
+    public $translationLanguageColumnName = 'language';
+    /**
+     * @var string language column type
+     */
+    public $translationLanguageColumnType = 'string';
+    /**
+     * @var mixed language column param
+     */
+    public $translationLanguageColumnParam = null;
+
+    public function hints()
+    {
+        return [
+            'migrationPath' => 'The path to the folder in which the migration file will be generated',
+            'db' => 'Connection to a database',
+            'tableName' => 'This is the name of the DB table',
+            'useTablePrefix' => 'This indicates whether the table name returned by the generated ActiveRecord class should consider the <code>tablePrefix</code> setting of the DB connection. For example, if the table name is <code>tbl_post</code> and <code>tablePrefix=tbl_</code>, the ActiveRecord class will return the table name as <code>{{%post}}</code>.',
+
+            'translationPostfix' => 'Postfix for translation table name. <code>{$tableName}_{$translationPostfix}</code>',
+            'translationRefColumn' => 'Name for model column',
+            'translationTableColumn' => 'Name for translation model column',
+            'translationLanguageTableName' => 'This is the name of the Language table',
+            'translationLanguageColumnRefName' => 'Language column name in language table',
+            'translationLanguageColumnName' => 'Language column name for translation table',
+            'translationLanguageColumnType' => 'Language column type in translation table',
+            'translationLanguageColumnParam' => 'Language column param in language table',
+        ];
+    }
 
     /**
      * @inheritdoc
      */
     public function __construct(array $config = [])
     {
-        $this->fields[] = [
-            'name' => 'id',
-            'type' => 'primaryKey',
-            'params' => null,
-            'isNull' => false,
-            'defaultValue' => null,
-            'isIndex' => true,
-            'isUnique' => false,
-            'comment' => 'ID',
-            'isTranslatable' => false,
-        ];
         parent::__construct($config);
-        $this->migrationName = $this->migrationName?:date('ymd_His');
+        if (!isset($this->fields)) {
+            $this->fields[] = [
+                'name' => 'id',
+                'type' => 'primaryKey',
+                'params' => null,
+                'notNull' => false,
+                'defaultValue' => null,
+                'isIndex' => true,
+                'isUnique' => false,
+                'comment' => 'ID',
+                'isTranslatable' => false,
+            ];
+        }
+        $this->migrationName = $this->migrationName ?: date('ymd_His');
     }
 
     /**
@@ -81,6 +146,7 @@ class Generator extends \yii\gii\Generator
                 'translationLanguageColumnRefName',
             ], 'required'],
             [['fields', 'foreignKeys',], 'fieldValidation'],
+            [['foreignKeys',], 'columnExistValidation'],
             [['translationLanguageColumnParam'], 'string'],
         ];
     }
@@ -103,17 +169,36 @@ class Generator extends \yii\gii\Generator
             }
         }
     }
-/** @inheritdoc */
+
+    public function columnExistValidation($attribute)
+    {
+        $raws = $this->$attribute;
+        foreach ($raws as $index => $raw) {
+            $rawColumn = $raw['column'];
+            if (!in_array($rawColumn, $this->getFieldNames())) {
+                $this->addError("{$attribute}[$index][column]", "\"$rawColumn\" can not declared in fields");
+        }
+
+        }
+    }
+
+    protected function getFieldNames()
+    {
+        return ArrayHelper::getColumn($this->fields, 'name');
+    }
+
+    /** @inheritdoc */
     public function requiredTemplates()
     {
         return ['view.php'];
     }
-public function save($files, $answers, &$results)
-{
-    $res = parent::save($files, $answers, $results);
-    $this->migrationName = date('ymd_His');
-    return $res;
-}
+
+    public function save($files, $answers, &$results)
+    {
+        $res = parent::save($files, $answers, $results);
+        $this->migrationName = date('ymd_His');
+        return $res;
+    }
 
     /**
      * @return string name of the code generator
@@ -134,72 +219,81 @@ public function save($files, $answers, &$results)
     public function generate()
     {
         $migrationPath = $this->getMigrationPath();
+
         $foreignKeys = $this->foreignKeys ?: [];
         $translatableForeignKeys = [];
+
+        $tableName = $this->tableName;
+        $translatableTableName = "{$tableName}{$this->translationPostfix}";
+
         $fieldsMap = ArrayHelper::map($this->fields, 'name', 'isTranslatable');
 
-        $translatableTableName = "{$this->tableName}{$this->translationPostfix}";
-
         foreach ($foreignKeys as $key => $foreignKey) {
-            if ($fieldsMap[$foreignKey['column']]) {
-                $translatableForeignKeys[$key] = $foreignKeys[$key];
-                $translatableForeignKeys[$key]['fk'] = $this->generateForeignKeyName($translatableTableName, $foreignKey['column'], $foreignKey['refTable'], $foreignKey['refColumn']);
-                $translatableForeignKeys[$key]['refTable'] = $this->generateTableName($foreignKey['refTable']);
-                unset($foreignKeys[$key]);
-            } else {
-                $foreignKeys[$key]['fk'] = $this->generateForeignKeyName($this->tableName, $foreignKey['column'], $foreignKey['refTable'], $foreignKey['refColumn']);
-                $foreignKeys[$key]['refTable'] = $this->generateTableName($foreignKey['refTable']);
+            if (key_exists($foreignKey['column'], $fieldsMap)) {
+                if ($fieldsMap[$foreignKey['column']]) {
+                    $translatableForeignKeys[$key] = $foreignKeys[$key];
+                    $translatableForeignKeys[$key]['fk'] = $this->generateForeignKeyName($translatableTableName, $foreignKey['column'], $foreignKey['refTable'], $foreignKey['refColumn']);
+                    $translatableForeignKeys[$key]['refTable'] = $this->generateTableName($foreignKey['refTable']);
+                    unset($foreignKeys[$key]);
+                } else {
+                    $foreignKeys[$key]['fk'] = $this->generateForeignKeyName($tableName, $foreignKey['column'], $foreignKey['refTable'], $foreignKey['refColumn']);
+                    $foreignKeys[$key]['refTable'] = $this->generateTableName($foreignKey['refTable']);
+                }
             }
         }
-        $files[] = $this->createTableCodeFile($this->tableName, $migrationPath, $this->getFields(false), $foreignKeys, $this->getIndexes());
+        $files[] = $this->createTableCodeFile($tableName, $migrationPath, $this->getFields(false), $foreignKeys, $this->getIndexes());
+        // translatable migration
         $translatableFields = $this->getFields(true);
         if (!empty($translatableFields)) {
 
             $IndexesField = ArrayHelper::index($this->fields, 'name');
             // add model foreign key for translation migration
-            array_unshift($translatableForeignKeys, [
-                'column' => $this->translationTableColumn,
-                'refColumn' => $this->translationRefColumn,
-                'refTable' => $this->generateTableName($this->tableName),
-                'delete' => 'CASCADE',
-                'update' => 'CASCADE',
-                'fk' => $this->generateForeignKeyName($translatableTableName, $this->translationTableColumn, $this->tableName, $this->translationRefColumn),
-            ]);
+            $this->insertForeignKey(
+                $translatableForeignKeys,
+                $this->createForeignKey(
+                    $translatableTableName,
+                    $this->translationTableColumn,
+                    $this->translationRefColumn,
+                    $tableName
+                ));
             // add language foreign key for translation migration
-            array_unshift($translatableForeignKeys, [
-                'column' => $this->translationLanguageColumnName,
-                'refColumn' => $this->translationLanguageColumnRefName,
-                'refTable' => $this->generateTableName($this->translationLanguageTableName),
-                'delete' => 'CASCADE',
-                'update' => 'CASCADE',
-                'fk' => $this->generateForeignKeyName($translatableTableName, $this->translationLanguageColumnName, $this->translationLanguageTableName, $this->translationLanguageColumnRefName),
-            ]);
+            $this->insertForeignKey(
+                $translatableForeignKeys,
+                $this->createForeignKey(
+                    $translatableTableName,
+                    $this->translationLanguageColumnName,
+                    $this->translationLanguageColumnRefName,
+                    $this->translationLanguageTableName
+                ));
+
             // add language field for translation migration
-            array_unshift($translatableFields, [
-                'name' => $this->translationLanguageColumnName,
-                'type' => $this->getTranslationColumnType($this->translationLanguageColumnType),
-                'params' => $this->translationLanguageColumnParam,
-                'isNull' => false,
-                'defaultValue' => null,
-                'isIndex' => true,
-                'isUnique' => false,
-                'comment' => 'Language',
-                'isTranslatable' => false,
-            ]);
+            $this->insertField($translatableFields,
+                $this->createField(
+                    $this->translationLanguageColumnName,
+                    $this->getTranslationColumnType($this->translationLanguageColumnType),
+                    $this->translationLanguageColumnParam,
+                    false,
+                    'Language',
+                    false,
+                    true,
+                    false,
+                    false
+                ));
             // if translation ref column exist
             if (isset($IndexesField[$this->translationRefColumn])) {
                 $refColumnType = $IndexesField[$this->translationRefColumn]['type'];
-                array_unshift($translatableFields, [
-                    'name' => $this->translationTableColumn,
-                    'type' => $this->getTranslationColumnType($refColumnType),
-                    'params' => null,
-                    'isNull' => false,
-                    'defaultValue' => null,
-                    'isIndex' => true,
-                    'isUnique' => false,
-                    'comment' => 'Model',
-                    'isTranslatable' => false,
-                ]);
+                $this->insertField($translatableFields,
+                    $this->createField(
+                        $this->translationTableColumn,
+                        $this->getTranslationColumnType($refColumnType),
+                        null,
+                        false,
+                        'Model',
+                        false,
+                        true,
+                        false,
+                        false
+                    ));
             }
             $files[] = $this->createTableCodeFile($translatableTableName, $migrationPath, $translatableFields, $translatableForeignKeys, $this->getIndexes(true));
         }
@@ -232,6 +326,83 @@ public function save($files, $answers, &$results)
         return array_filter($this->fields, function ($v) use ($translatable) {
             return $v['isTranslatable'] == $translatable;
         });
+    }
+
+    /**
+     * @param string $columnName
+     * @param string $columnType
+     * @param mixed $params
+     * @param mixed $defaultValue
+     * @param string $comment
+     * @param bool $notNull
+     * @param bool $isIndex
+     * @param bool $isUnique
+     * @param bool $isTranslatable
+     * @return array
+     */
+    protected function createField($columnName, $columnType, $params, $defaultValue, $comment, $notNull = true, $isIndex = false, $isUnique = false, $isTranslatable = false)
+    {
+        return [
+            'name' => $columnName,
+            'type' => $columnType,
+            'params' => $params,
+            'notNull' => $notNull,
+            'defaultValue' => $defaultValue,
+            'isIndex' => $isIndex,
+            'isUnique' => $isUnique,
+            'comment' => $comment,
+            'isTranslatable' => $isTranslatable,
+        ];
+    }
+
+    /**
+     * @param array $fields
+     * @param array $field
+     * @param bool $begin
+     */
+    protected function insertField(&$fields, $field, $begin = true)
+    {
+        if ($begin) {
+            array_unshift($fields, $field);
+        } else {
+            array_push($fields, $field);
+        }
+    }
+
+    /**
+     * @param string $table for foreign key name
+     * @param string $column
+     * @param string $refColumn
+     * @param string $refTable
+     * @param string $delete
+     * @param string $update
+     * @return array
+     */
+    protected function createForeignKey($table, $column, $refColumn, $refTable, $delete = 'CASCADE', $update = 'CASCADE')
+    {
+        return [
+            'column' => $column,
+            'refColumn' => $refColumn,
+            'refTable' => $this->generateTableName($refTable),
+            'delete' => $delete,
+            'update' => $update,
+            'fk' => $this->generateForeignKeyName($table, $column, $refTable, $refColumn),
+        ];
+
+    }
+
+    /**
+     * @param array $foreignKeys
+     * @param array $foreignKey
+     * @param bool $begin
+     */
+    protected function insertForeignKey(&$foreignKeys, $foreignKey, $begin = true)
+    {
+        if ($begin) {
+            array_unshift($foreignKeys, $foreignKey);
+        } else {
+            array_push($foreignKeys, $foreignKey);
+        }
     }
 
     /**
@@ -314,7 +485,7 @@ public function save($files, $answers, &$results)
     protected function getMigrationName($table)
     {
         $dateTime = $this->migrationName;
-        return "m{$dateTime}_{$table}";
+        return "m{$dateTime}_create_{$table}_table";
     }
 
     /**
