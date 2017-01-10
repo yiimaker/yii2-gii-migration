@@ -13,7 +13,9 @@
 <?='<?php'?>
 
 use yii\db\Migration;
-
+/**
+* Handles the creation of table `<?=$tableName?>`.
+*/
 class <?=$migrationName?> extends Migration
 {
     public $db = '<?= $db ?>';
