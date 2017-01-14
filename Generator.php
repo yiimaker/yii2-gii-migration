@@ -272,7 +272,7 @@ class Generator extends \yii\gii\Generator
                     $this->translationLanguageColumnName,
                     $this->getTranslationColumnType($this->translationLanguageColumnType),
                     $this->translationLanguageColumnParam,
-                    false,
+                    null,
                     'Language',
                     false,
                     true,
@@ -287,7 +287,7 @@ class Generator extends \yii\gii\Generator
                         $this->translationTableColumn,
                         $this->getTranslationColumnType($refColumnType),
                         null,
-                        false,
+                        null,
                         'Model',
                         false,
                         true,
@@ -295,6 +295,19 @@ class Generator extends \yii\gii\Generator
                         false
                     ));
             }
+            // add primary key
+            $this->insertField($translatableFields,
+                $this->createField(
+                    'id',
+                    'primaryKey',
+                    $this->translationLanguageColumnParam,
+                    null,
+                    'ID',
+                    false,
+                    true,
+                    false,
+                    false
+                ));
             $files[] = $this->createTableCodeFile($translatableTableName, $migrationPath, $translatableFields, $translatableForeignKeys, $this->getIndexes(true));
         }
         return $files;
