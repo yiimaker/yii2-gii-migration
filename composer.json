@@ -23,7 +23,7 @@
     "require": {
         "yiisoft/yii2": "~2.0.0",
         "unclead/yii2-multiple-input": "~2.0",
-        "bower-asset/jquery-ui": "^1.12.1"
+        "bower-asset/jquery-ui": "^1.0.0"
     },
     "autoload": {
         "psr-4": {
