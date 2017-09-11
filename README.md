@@ -1,41 +1,47 @@
-Gii Migration
-=============
-Yii2 Gii Migration
+<p align="center">
+    <a href="https://github.com/yiimaker" target="_blank">
+        <img src="https://avatars1.githubusercontent.com/u/24204902" height="100px">
+    </a>
+    <h1 align="center">Migration generator for Gii</h1>
+    <br>
+</p>
+
+[![Total Downloads](https://poser.pugx.org/yiimaker/yii2-gii-migration/downloads)](https://packagist.org/packages/yiimaker/yii2-gii-migration)
+[![Latest Stable Version](https://poser.pugx.org/yiimaker/yii2-gii-migration/v/stable)](https://packagist.org/packages/yiimaker/yii2-gii-migration)
+[![Latest Unstable Version](https://poser.pugx.org/yiimaker/yii2-gii-migration/v/unstable)](https://packagist.org/packages/yiimaker/yii2-gii-migration)
 
 Installation
 ------------
-
-The preferred way to install this extension is through [composer](http://getcomposer.org/download/).
-
-Either run
-
+#### Install package
+Run command
 ```
-php composer.phar require --prefer-dist yiimaker/yii2-gii-migration "*"
+composer require yiimaker/yii2-gii-migration
 ```
-
 or add
-
+```json
+"yiimaker/yii2-gii-migration": "~1.0"
 ```
-"yiimaker/yii2-gii-migration": "*"
-```
-
-to the require section of your `composer.json` file.
-
+to the require section of your composer.json.
 
 Usage
 -----
-In gii config
+Configure generator in Gii module configuration
 ```php
-'generators' => [
-    'migration' => [
-        'class' => '\ymaker\gii\migration\Generator',
-    ]
+'modules' => [
+    'gii' => [
+        // ...
+        'generators' => [
+            // ...
+            'migration' => [
+                'class' => \ymaker\gii\migration\Generator::class,
+            ],
+        ],
+    ],
 ],
 ```
 
-
 Fields
-------
+======
 
 |Field                               |  Type  |       Default          |Description                                                          |
 |:-----------------------------------|:------:|:----------------------:|:--------------------------------------------------------------------|
@@ -54,3 +60,11 @@ Fields
 |`$translationLanguageColumnName`    |`string`|`'language'`            |language column name for translation table                           |
 |`$translationLanguageColumnType`    |`string`|`string`                |language column type                                                 |
 |`$translationLanguageColumnParam`   |`string`|`null`                  |language column param                                                |
+
+License
+-------
+[![License](https://poser.pugx.org/yiimaker/yii2-gii-migration/license)](https://packagist.org/packages/yiimaker/yii2-gii-migration)
+
+This project is released under the terms of the BSD-3-Clause [license](LICENSE).
+
+Copyright (c) 2017, Yii Maker
